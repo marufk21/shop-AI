@@ -55,6 +55,9 @@ export const ProductCard = React.memo(function ProductCard({
   return (
     <Link
       href={`/store/${product.slug}`}
+      // Full RSC prefetch: starts the server-side data fetch as soon as the
+      // card is visible/hovered, so clicking doesn't wait on the backend.
+      prefetch={true}
       className="block w-full h-full group/card cursor-pointer outline-none"
     >
       <motion.div

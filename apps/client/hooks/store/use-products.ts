@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { keepPreviousData, useQuery } from "@tanstack/react-query"
 
 import { ApiError } from "@/server/api-client"
 import {
@@ -25,6 +25,9 @@ export function useStoreProducts(
     queryKey: storeProductKeys.list(params),
     queryFn: () => fetchStoreProducts(params),
     enabled,
+    // Keep the previous page/category visible while the next fetch is in
+    // flight instead of flashing a full skeleton.
+    placeholderData: keepPreviousData,
   })
 }
 

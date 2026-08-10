@@ -25,7 +25,9 @@ export default async function ProductDetailPage({
     })
 
     if (product?.category) {
-      await queryClient.prefetchQuery({
+      // Don't await: dehydrate() ships pending queries to the client, so this
+      // must not delay first paint when the backend is slow/cold-starting.
+      void queryClient.prefetchQuery({
         queryKey: storeProductKeys.list({
           category: product.category,
           limit: 24,

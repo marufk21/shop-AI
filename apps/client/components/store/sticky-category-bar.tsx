@@ -101,19 +101,19 @@ export function StickyCategoryBar() {
       <div className="scrollbar-hide mx-auto flex h-11 max-w-7xl items-center justify-center gap-[7px] overflow-x-auto px-4 sm:justify-start sm:gap-1 sm:px-6">
         {isLoading
           ? Array.from({ length: 7 }).map((_, i) => (
+            <div
+              key={`cat-sk-${i}`}
+              className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-muted/60 px-[11px] sm:px-3"
+            >
+              <div className="size-3.5 shrink-0 rounded-sm bg-muted/40" />
               <div
-                key={`cat-sk-${i}`}
-                className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-muted/60 px-[11px] sm:px-3"
-              >
-                <div className="size-3.5 shrink-0 rounded-sm bg-muted/40" />
-                <div
-                  className={cn(
-                    "h-2.5 rounded-sm bg-muted/40",
-                    i === 0 ? "w-12 sm:w-14" : "hidden sm:block sm:w-12"
-                  )}
-                />
-              </div>
-            ))
+                className={cn(
+                  "h-2.5 rounded-sm bg-muted/40",
+                  i === 0 ? "w-12 sm:w-14" : "hidden sm:block sm:w-12"
+                )}
+              />
+            </div>
+          ))
           : (
             <>
               {/* For You */}
@@ -143,6 +143,10 @@ export function StickyCategoryBar() {
                   <Link
                     key={name}
                     href={`/store/category/${catSlug}`}
+                    // Full RSC prefetch: warm the category data while the bar
+                    // is visible so switching categories doesn't hit a slow
+                    // backend on click.
+                    prefetch={true}
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
                       "flex h-8 shrink-0 items-center gap-1.5 rounded-lg transition-colors",
