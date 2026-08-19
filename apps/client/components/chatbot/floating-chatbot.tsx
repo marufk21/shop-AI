@@ -41,7 +41,7 @@ const quickReplies = [
 ]
 
 export function FloatingChatbot() {
-  const { messages, isStreaming, sendMessage, activeAgent } = useChat()
+  const { messages, isStreaming, sendMessage, clearMessages, activeAgent } = useChat()
   const [input, setInput] = useState("")
   const [open, setOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -122,13 +122,24 @@ export function FloatingChatbot() {
                 </div>
               </div>
             </div>
-            <button
-              onClick={() => setOpen(false)}
-              aria-label="Close chat"
-              className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
-            >
-              <X className="size-3.5" />
-            </button>
+            <div className="flex items-center gap-1.5">
+              {messages.length > 0 && (
+                <button
+                  onClick={clearMessages}
+                  disabled={isStreaming}
+                  className="rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                onClick={() => setOpen(false)}
+                aria-label="Close chat"
+                className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 

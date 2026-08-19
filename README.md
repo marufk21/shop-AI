@@ -1,41 +1,77 @@
 # ShopAI
 
-AI-first e-commerce SaaS platform with an admin dashboard, AI-powered product tools, RAG chatbot, document management, analytics, and a customer storefront.
+ShopAI is an AI-first e-commerce monorepo that combines a modern storefront, an admin dashboard, and a document-aware support chatbot in one codebase.
+
+It includes:
+
+- a customer-facing store built with Next.js
+- an internal admin panel for products, documents, analytics, and AI tools
+- a FastAPI backend for products, uploads, chat, and AI workflows
+- a RAG chatbot powered by LangGraph, Gemini, and pgvector
+
+## What This Project Does
+
+### Storefront
+
+- Home page with hero carousel, promo content, category sections, and product rows
+- Product listing, category pages, and product detail pages
+- Cart drawer with persistent state
+- Quick view, related products, and recently viewed products
+- Responsive navigation with polished UX touches
+
+### Admin Dashboard
+
+- Product CRUD with Cloudinary image upload
+- AI-assisted product copy improvement
+- Document upload and indexing for RAG
+- Chatbot testing interface with streaming answers and citations
+- Analytics and settings pages
+
+### AI and RAG
+
+- Document parsing, chunking, embedding, and vector indexing
+- Multi-agent chat routing with LangGraph
+- Support answers grounded in uploaded documents
+- Product-specific query handling through a separate agent
+- SSE-based real-time chatbot streaming
+
+## Chatbot Agent Roles
+
+The chatbot currently has three roles:
+
+- `supervisor` - routes each user query to the right specialist
+- `support` - handles policy, shipping, returns, order tracking, and other document-backed questions using RAG
+- `product` - handles product-related shopping and catalog questions
 
 ## Tech Stack
 
 | Category | Technology |
 |---|---|
-| **Framework** | Next.js 16 (Turbopack) |
-| **UI Library** | React 19 |
-| **Language** | TypeScript (strict) |
-| **Styling** | Tailwind CSS v4 |
-| **Components** | shadcn/ui (Mira/taupe theme) |
-| **Server State** | TanStack Query v5 |
-| **Forms** | react-hook-form + Zod |
-| **Charts** | Recharts |
-| **Motion** | Framer Motion |
-| **Smooth Scroll** | Lenis |
-| **Icons** | Phosphor Icons |
-| **Backend** | FastAPI (Python 3.12) |
-| **ORM** | SQLAlchemy 2.0 (async) |
-| **Database** | PostgreSQL + pgvector |
-| **AI** | Gemini (2.5 Flash + embedding-001) |
-| **AI Framework** | LangChain |
-| **Image Storage** | Cloudinary |
-| **Validation** | Pydantic v2 |
-| **Package Manager** | pnpm (Turborepo) |
-
----
+| Frontend | Next.js 16, React 19, TypeScript |
+| Styling | Tailwind CSS v4 |
+| UI Components | shadcn/ui on `@base-ui/react` |
+| State | TanStack Query v5 |
+| Forms | react-hook-form + Zod |
+| Motion | Framer Motion |
+| Smooth Scroll | Lenis |
+| Icons | Phosphor Icons |
+| Backend | FastAPI, Python 3.12 |
+| ORM | SQLAlchemy 2.0 async |
+| Database | PostgreSQL + pgvector |
+| Validation | Pydantic v2 |
+| AI Models | Gemini 2.5 Flash, `embedding-001` |
+| AI Framework | LangChain + LangGraph |
+| Image Storage | Cloudinary |
+| Monorepo Tooling | pnpm + Turborepo |
 
 ## Getting Started
 
 ### Prerequisites
 
-- **Node.js** >= 20
-- **pnpm** >= 10.33
-- **Python** >= 3.12
-- **PostgreSQL** with [pgvector](https://github.com/pgvector/pgvector) extension
+- Node.js `>= 20`
+- pnpm `>= 10.33`
+- Python `>= 3.12`
+- PostgreSQL with the [pgvector](https://github.com/pgvector/pgvector) extension enabled
 
 ### Install
 
@@ -45,13 +81,13 @@ pnpm install
 
 ### Environment Variables
 
-**Client** — create `apps/client/.env.local`:
+Create `apps/client/.env.local`:
 
 ```env
 NEXT_PUBLIC_API_URL="http://localhost:8000/api/v1"
 ```
 
-**Server** — create `apps/server/.env`:
+Create `apps/server/.env`:
 
 ```env
 DATABASE_URL="postgresql://user:password@host:5432/dbname?sslmode=require"
@@ -62,141 +98,138 @@ CLOUDINARY_CLOUD_NAME="your-cloud-name"
 CLOUDINARY_API_KEY="your-api-key"
 CLOUDINARY_UPLOAD_PRESET="your-upload-preset"
 CLOUDINARY_API_SECRET="your-api-secret"
-FRONTEND_URL="http://localhost:3000"   # optional — for CORS
-KEEP_ALIVE_URLS="http://localhost:8000/health"   # optional — comma-separated URLs to keep warm
-KEEP_ALIVE_INTERVAL_SECONDS="600"      # optional — ping interval (default: 600)
+FRONTEND_URL="http://localhost:3000"
+KEEP_ALIVE_URLS="http://localhost:8000/health"
+KEEP_ALIVE_INTERVAL_SECONDS="600"
 ```
 
 ### Develop
 
-```bash
-pnpm dev          # client :3000, server :8000 (Turborepo parallel)
-```
-
-Or run individually:
+Run both apps from the repo root:
 
 ```bash
-cd apps/client && pnpm dev     # Next.js + Turbopack → http://localhost:3000
-cd apps/server && pnpm dev     # FastAPI + uvicorn → http://localhost:8000
+pnpm dev
 ```
 
----
+This starts:
+
+- client on `http://localhost:3000`
+- server on `http://localhost:8000`
+
+Or run them individually:
+
+```bash
+cd apps/client && pnpm dev
+cd apps/server && pnpm dev
+```
 
 ## Project Structure
 
-```
-shopai/
+```text
+shop-ai/
 ├── apps/
-│   ├── client/                       Next.js 16 (Turbopack)
+│   ├── client/
 │   │   ├── app/
-│   │   │   ├── (admin)/admin/        dashboard, products, documents, chatbot, analytics, settings
-│   │   │   ├── (store)/store/        storefront home, product detail, category, all products, cart
-│   │   │   ├── error.tsx             route-level error boundary
-│   │   │   ├── global-error.tsx      global error fallback
+│   │   │   ├── (admin)/admin/        admin pages: dashboard, products, documents, chatbot, analytics, settings
+│   │   │   ├── (store)/store/        storefront pages
+│   │   │   ├── error.tsx             route-level error UI
+│   │   │   ├── global-error.tsx      global error UI
 │   │   │   ├── not-found.tsx         404 page
-│   │   │   ├── robots.ts             SEO robots.txt
+│   │   │   ├── robots.ts             SEO robots
 │   │   │   └── sitemap.ts            SEO sitemap
 │   │   ├── components/
-│   │   │   ├── store/                storefront: cart, navbar, product cards, home sections, footer
-│   │   │   ├── store/home/           hero, categories, deals, offers, promos, brand marquee
-│   │   │   ├── layout/               app-sidebar, app-header
-│   │   │   ├── shared/               data-table, command-menu, theme-provider, back-to-top, cookie-consent,
-│   │   │   │                         lenis-provider, markdown-renderer
-│   │   │   └── chatbot/              chatbot-wrapper, floating-chatbot (SSE streaming)
-│   │   ├── hooks/
-│   │   │   ├── admin/                use-products, use-documents, use-chat
-│   │   │   └── store/                use-products, use-recently-viewed
-│   │   ├── server/                   axios client + API fetchers
-│   │   ├── lib/                      image-url, format-currency, query-client, animation-variants
-│   │   └── types/                    product.ts, document.ts, chat.ts
-│   │
-│   └── server/                       FastAPI
-│       ├── api/admin/                products, upload, ai, documents, chat
-│       ├── api/store/                products, categories
-│       ├── controllers/              admin + store business logic
-│       ├── db/                       product, document, vector repositories
-│       ├── models/                   SQLAlchemy + pgvector models
-│       ├── schemas/                  Pydantic request/response schemas
-│       ├── core/                     config, database, DI
-│       ├── utils/                    ai_generator, chunker, cloudinary, document_parser, embedding, slug, keep_alive
-│       └── scripts/                  price_generator, image_handler, batch_importer, csv_reader,
-│                                     import_fashion_dataset, description_builder, report
-│
-└── packages/
-    ├── ui/                           shadcn/ui components (33 components on @base-ui/react)
-    ├── eslint-config/                shared ESLint configs
-    └── typescript-config/            shared TS configs
+│   │   │   ├── chatbot/              floating storefront chatbot
+│   │   │   ├── layout/               admin shell UI
+│   │   │   ├── shared/               reusable client utilities and UI
+│   │   │   ├── store/                storefront components
+│   │   │   └── store/home/           home page sections
+│   │   ├── hooks/                    admin and store hooks
+│   │   ├── lib/                      client utilities
+│   │   ├── server/                   API fetchers
+│   │   └── types/                    frontend types
+│   └── server/
+│       ├── agents/                   LangGraph supervisor and specialists
+│       ├── api/                      FastAPI routes
+│       ├── controllers/              business logic
+│       ├── core/                     config, database, dependencies
+│       ├── db/                       repositories
+│       ├── models/                   SQLAlchemy models
+│       ├── schemas/                  Pydantic schemas
+│       ├── scripts/                  import and utility scripts
+│       ├── uploads/documents/        uploaded RAG files
+│       └── utils/                    parsing, chunking, embedding, AI helpers
+├── packages/
+│   ├── ui/
+│   ├── eslint-config/
+│   └── typescript-config/
+├── package.json
+├── pnpm-workspace.yaml
+└── turbo.json
 ```
 
----
+## Key Features
 
-## Features
+### Admin Features
 
-### Admin Dashboard
-
-| Page | Description |
+| Area | Description |
 |---|---|
-| **Dashboard** | Overview and quick actions |
-| **Products** | Full CRUD with Cloudinary image upload, AI-powered name/description improvement |
-| **Documents** | Upload PDFs, parse, chunk, embed, and index into pgvector for RAG |
-| **Chatbot** | RAG-powered chat with SSE streaming, source citations, and context-aware responses |
-| **Analytics** | Charts and metrics dashboard (Recharts) |
-| **Settings** | Application configuration |
+| Products | Full CRUD with Cloudinary image upload and AI-assisted copy improvement |
+| Documents | Upload, parse, chunk, embed, and index documents for RAG |
+| Chatbot | Streaming multi-agent chat with citations |
+| Analytics | Dashboard metrics and charts |
+| Settings | App-level configuration UI |
 
-### Storefront
+### Store Features
 
-- **Home page** — hero carousel, category icon grid, flash deals section, offer cards strip, promo banners, brand marquee, product rows by category
-- **Product listing** — grid layout with category filter, loading skeletons
-- **Product detail** — image gallery, quantity selector, add-to-cart, tabbed specs/reviews, trust badges, bank offers
-- **Category pages** — slug-based routing with filtered product grids
-- **All products** — paginated browse-all page
-- **Cart** — slide-out drawer with quantity controls, persistent across sessions (lazy loaded)
-- **Quick view** — modal product preview from listing cards
-- **Recently viewed** — localStorage-backed product history
-- **Related products** — category-based suggestions on detail pages
-- **Responsive** — announcement bar, sticky category bar, mobile bottom nav bar, store footer with search
-- **UX polish** — cookie consent banner, back-to-top button, Lenis smooth scrolling, loading skeletons
+- Product browsing with category-based navigation
+- Product detail experience with cart actions
+- Related and recently viewed products
+- Responsive layout with store-specific navigation
+- Smooth scrolling, loading skeletons, and UX polish
 
-### AI Pipeline
+### Platform Features
 
-1. **Document ingestion:** Upload → parse text → split into chunks → generate embeddings (Gemini `embedding-001`) → store in pgvector
-2. **RAG chat:** Embed user query → cosine similarity search (`<=>`) → build context from matching chunks → stream Gemini 2.5 Flash response via SSE (`text/event-stream`) → emit `token` events, `sources` citations, then `[DONE]`
-3. **Text improvement:** AI-powered product name and description enhancer (Gemini 2.5 Flash)
+- SEO via `robots.ts` and `sitemap.ts`
+- Error boundaries and custom 404 flows
+- Keep-alive support for hosted backend uptime
+- Import and batch-processing scripts for product data
 
-### Platform
+## How the RAG Pipeline Works
 
-- **SEO** — dynamic `robots.ts` + `sitemap.ts`, semantic HTML
-- **Error handling** — global error boundary (`global-error.tsx`), route-level error boundary (`error.tsx`), custom 404 page
-- **Keep-alive** — configurable periodic health-check pings to prevent free-tier hosting spin-down
-- **Data seeding** — scripts for batch importing products, generating prices/descriptions from CSVs
-
----
+1. A document is uploaded from the admin dashboard.
+2. The backend parses the file into text.
+3. The text is split into smaller chunks.
+4. Embeddings are generated with Gemini `embedding-001`.
+5. Chunks and vectors are stored in PostgreSQL using pgvector.
+6. During chat, the user query is embedded and matched against stored chunks.
+7. Retrieved context is passed into the support agent.
+8. The final answer is streamed to the UI over SSE with source citations.
 
 ## API Reference
 
-All endpoints are prefixed with `/api/v1/`. The server runs on `http://localhost:8000`.
+All endpoints are prefixed with `/api/v1`. The server runs on `http://localhost:8000`.
 
 ### Admin
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/products` | Create product (multipart: JSON + optional image) |
-| `GET` | `/products` | List products (`?status=`, `?search=`, `?skip=`, `?limit=`) |
+| `POST` | `/products` | Create a product |
+| `GET` | `/products` | List products |
 | `GET` | `/products/:id` | Get product by UUID |
-| `PUT` | `/products/:id` | Update product (multipart) |
-| `DELETE` | `/products/:id` | Delete product |
-| `POST` | `/upload/image` | Upload image to Cloudinary |
-| `POST` | `/ai/improve` | AI-improve product name or description |
-| `POST` | `/documents/upload` | Upload document for RAG ingestion |
-| `GET` | `/documents` | List documents |
-| `DELETE` | `/documents/:id` | Delete document + chunks |
-| `POST` | `/chat/message` | RAG chat (SSE stream) |
+| `PUT` | `/products/:id` | Update a product |
+| `DELETE` | `/products/:id` | Delete a product |
+| `POST` | `/upload/image` | Upload an image to Cloudinary |
+| `POST` | `/ai/improve` | Improve product name or description with AI |
+| `POST` | `/documents/upload` | Upload a document for RAG ingestion |
+| `GET` | `/documents` | List uploaded documents |
+| `DELETE` | `/documents/:id` | Delete a document and its chunks |
+| `POST` | `/chat/message` | Stream chatbot response via SSE |
 
 ### Store
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/store/products` | List published products (`?category=`, `?skip=`, `?limit=`) |
+| `GET` | `/store/products` | List published products |
 | `GET` | `/store/products/:slug` | Get product by slug |
 | `GET` | `/store/categories` | List distinct product categories |
 
@@ -206,52 +239,46 @@ All endpoints are prefixed with `/api/v1/`. The server runs on `http://localhost
 |---|---|---|
 | `GET` | `/health` | Health check |
 
----
-
 ## Quality Gates
 
-Run from repo root (Turborepo):
+Run from the repo root:
 
 ```bash
-pnpm typecheck     # tsc --noEmit + mypy (strict)
-pnpm lint          # ESLint + Ruff
-pnpm format        # Prettier + Ruff format
+pnpm typecheck
+pnpm lint
+pnpm format
 ```
 
-Or scope to one app:
+Or run per app:
 
 ```bash
 cd apps/client && pnpm typecheck
 cd apps/server && pnpm typecheck
 ```
 
----
-
 ## UI Components
 
-33 shadcn/ui components built on `@base-ui/react`, available in `packages/ui/`. Import from `@workspace/ui/components/<name>`:
+The shared UI package contains 33 shadcn/ui components built on `@base-ui/react`.
 
-`accordion` · `avatar` · `badge` · `breadcrumb` · `button` · `card` · `carousel` · `checkbox` · `collapsible` · `command` · `dialog` · `drawer` · `dropdown-menu` · `hover-card` · `input` · `input-group` · `label` · `navigation-menu` · `popover` · `progress` · `radio-group` · `scroll-area` · `select` · `separator` · `sheet` · `sidebar` · `skeleton` · `slider` · `switch` · `table` · `tabs` · `textarea` · `tooltip`
+Import components like this:
 
-Add new components:
+```tsx
+import { Button } from "@workspace/ui/components/button"
+```
+
+Add a new component with:
 
 ```bash
 pnpm dlx shadcn@latest add <component> -c packages/ui
 ```
 
----
+## Design Notes
 
-## Design
-
-**Design language:** Modern, minimal, premium, AI-native.
-
-- **Colors:** OKLCH semantic tokens (Taupe/Mira theme), dark mode via `next-themes`
-- **Fonts:** Lora (headings), Raleway (body), Geist Mono (code)
-- **Motion:** Framer Motion for transitions, hovers, streaming, loading states
-- **Smooth scrolling:** Lenis for butter-smooth scroll experience
-- **Layout:** Fixed collapsible sidebar + card-driven responsive grid
-
----
+- Semantic OKLCH color tokens with the Mira/taupe theme
+- Lora for headings, Raleway for body text, Geist Mono for code
+- Framer Motion for transitions and interaction polish
+- Lenis for smooth scrolling
+- A clean, modern, card-driven visual style
 
 ## License
 

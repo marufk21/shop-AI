@@ -12,22 +12,24 @@ import { PromoBanners } from "./promo-banners"
 import { HomeSkeleton } from "./home-skeleton"
 import type { Product } from "@/types/product"
 
-function shuffleSlice(
-  products: Product[],
-  start: number,
-  count: number
-): Product[] {
-  const shuffled = [...products]
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    const temp = shuffled[i]
-    if (!temp) continue
-    const other = shuffled[j]
-    if (!other) continue
-    shuffled[i] = other
-    shuffled[j] = temp
+function stableHash(value: string) {
+  let hash = 0
+
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0
   }
-  return shuffled.slice(start, start + count)
+
+  return hash
+}
+
+function pickStableSlice(products: Product[], start: number, count: number): Product[] {
+  return [...products]
+    .sort((a, b) => {
+      const hashDiff = stableHash(a.id) - stableHash(b.id)
+      if (hashDiff !== 0) return hashDiff
+      return a.id.localeCompare(b.id)
+    })
+    .slice(start, start + count)
 }
 
 const RecentlyViewed = dynamic(
@@ -80,15 +82,15 @@ export function HomePageContent() {
   )
 
   const newArrivals = React.useMemo(() => {
-    return shuffleSlice(products, 0, 10)
+    return pickStableSlice(products, 0, 10)
   }, [products])
 
   const featured = React.useMemo(() => {
-    return shuffleSlice(products, 10, 10)
+    return pickStableSlice(products, 10, 10)
   }, [products])
 
   const deals = React.useMemo(() => {
-    return shuffleSlice(products, 20, 8)
+    return pickStableSlice(products, 20, 8)
   }, [products])
 
   if (isLoading) {
