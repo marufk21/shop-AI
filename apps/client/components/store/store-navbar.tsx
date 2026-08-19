@@ -69,7 +69,7 @@ export function StoreNavbar() {
           </div>
 
           {/* Center: Search Bar */}
-          <form
+          {/* <form
             action="/store/products"
             role="search"
             className="hidden sm:flex flex-1 max-w-xl items-center gap-2.5 rounded-lg border border-border/60 bg-muted/30 px-4 h-9 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30"
@@ -88,7 +88,7 @@ export function StoreNavbar() {
             <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded-lg border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
               <span className="text-[9px]">⌘</span>K
             </kbd>
-          </form>
+          </form> */}
 
           {/* Right: Actions - Desktop */}
           <div className="hidden md:flex flex-1 items-center justify-end gap-1">
