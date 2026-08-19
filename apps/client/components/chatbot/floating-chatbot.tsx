@@ -47,8 +47,10 @@ export function FloatingChatbot() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+    if (!open) return
+
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
+  }, [messages, isStreaming, open])
 
   const lenis = useLenis()
 
@@ -131,7 +133,10 @@ export function FloatingChatbot() {
         </div>
 
         {/* Messages area */}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
+        <div
+          data-lenis-prevent
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4"
+        >
           <div className="space-y-3">
               {messages.length === 0 && (
                 <div className="flex flex-col items-center pt-6 pb-4">

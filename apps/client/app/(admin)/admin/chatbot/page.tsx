@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@workspace/ui/components/button"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { Badge } from "@workspace/ui/components/badge"
@@ -44,6 +44,16 @@ export default function ChatbotPage() {
   const [ragEnabled, setRagEnabled] = useState(true)
   const [modelTemp, setModelTemp] = useState(0.7)
   const scrollViewportRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const viewport = scrollViewportRef.current
+    if (!viewport) return
+
+    viewport.scrollTo({
+      top: viewport.scrollHeight,
+      behavior: "smooth",
+    })
+  }, [messages, isStreaming])
 
   const handleSend = () => {
     if (!input.trim() || isStreaming) return
@@ -117,7 +127,11 @@ export default function ChatbotPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex min-h-0 flex-1 flex-col p-0">
-            <ScrollArea className="min-h-0 flex-1 overflow-hidden" viewportRef={scrollViewportRef}>
+            <ScrollArea
+              className="min-h-0 flex-1 overflow-hidden"
+              viewportRef={scrollViewportRef}
+              data-lenis-prevent
+            >
               <div className="space-y-4 p-4">
                 {messages.length === 0 ? (
                   <div className="py-16 text-center">
