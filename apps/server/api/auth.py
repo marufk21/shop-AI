@@ -11,6 +11,11 @@ from schemas import AuthResponse, AuthUserResponse, SignInRequest, SignUpRequest
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
+def _cookie_samesite() -> Literal["lax", "none"]:
+    """Return 'none' for cross-origin production deployments, 'lax' for local dev."""
+    return "none" if settings.secure_cookies else "lax"
+
+
 def set_auth_cookie(response: Response, session_token: str) -> None:
     response.set_cookie(
         key=settings.auth_cookie_name,
