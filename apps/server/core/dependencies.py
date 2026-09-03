@@ -1,6 +1,6 @@
 from collections.abc import AsyncGenerator
 
-from fastapi import Cookie, Depends, HTTPException, status
+from fastapi import Cookie, Depends, Header, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from controllers import ChatController, DocumentController
@@ -95,9 +95,13 @@ async def get_chat_controller(
 
 async def get_current_user(
     session_token: str | None = Cookie(default=None, alias=settings.auth_cookie_name),
+    authorization: str | None = Header(default=None),
     auth_controller: AuthController = Depends(get_auth_controller),
 ) -> User | None:
-    return await auth_controller.get_current_user_from_token(session_token)
+    token = session_token
+    if not token and authorization and authorization.startswith("Bearer "):
+        token = authorization.removeprefix("Bearer ").strip()
+    return await auth_controller.get_current_user_from_token(token)
 
 
 async def require_authenticated_user(

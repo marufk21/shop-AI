@@ -33,6 +33,16 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>
 }
 
+function getAuthHeaders(): Record<string, string> {
+  if (typeof window === "undefined") return {}
+  try {
+    const token = localStorage.getItem("shopai_token")
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  } catch {
+    return {}
+  }
+}
+
 function buildUrl(path: string, params?: Record<string, string | number | boolean | undefined>): string {
   const url = new URL(path, BASE_URL)
   if (params) {
@@ -50,27 +60,38 @@ export const apiClient = {
     const url = buildUrl(path, options?.params)
     const response = await fetch(url, {
       credentials: "include",
+      headers: {
+        ...getAuthHeaders(),
+      },
       ...(options?.next ? { next: options.next } : {}),
     })
     return handleResponse<T>(response)
   },
 
   async post<T>(path: string, body?: unknown): Promise<T> {
+    const isFormData = body instanceof FormData
     const response = await fetch(`${BASE_URL}${path}`, {
       method: "POST",
       credentials: "include",
-      headers: body instanceof FormData ? undefined : { "Content-Type": "application/json" },
-      body: body instanceof FormData ? body : JSON.stringify(body),
+      headers: {
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+        ...getAuthHeaders(),
+      },
+      body: isFormData ? body : JSON.stringify(body),
     })
     return handleResponse<T>(response)
   },
 
   async put<T>(path: string, body?: unknown): Promise<T> {
+    const isFormData = body instanceof FormData
     const response = await fetch(`${BASE_URL}${path}`, {
       method: "PUT",
       credentials: "include",
-      headers: body instanceof FormData ? undefined : { "Content-Type": "application/json" },
-      body: body instanceof FormData ? body : JSON.stringify(body),
+      headers: {
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+        ...getAuthHeaders(),
+      },
+      body: isFormData ? body : JSON.stringify(body),
     })
     return handleResponse<T>(response)
   },
@@ -79,6 +100,9 @@ export const apiClient = {
     const response = await fetch(`${BASE_URL}${path}`, {
       method: "DELETE",
       credentials: "include",
+      headers: {
+        ...getAuthHeaders(),
+      },
     })
     return handleResponse<T>(response)
   },

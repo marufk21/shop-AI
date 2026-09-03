@@ -69,3 +69,4 @@ class AuthUserResponse(BaseModel):
 
 class AuthResponse(BaseModel):
     user: AuthUserResponse
+    session_token: str | None = None

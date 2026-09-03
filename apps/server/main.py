@@ -63,39 +63,6 @@ async def init_database() -> None:
             await asyncio.sleep(DB_RETRY_DELAY_SECONDS)
 
 
-DB_STARTUP_RETRIES = 3
-DB_RETRY_DELAY_SECONDS = 5
-
-
-async def init_database() -> None:
-    """Run startup DB setup, retrying on transient network/DNS failures."""
-    for attempt in range(1, DB_STARTUP_RETRIES + 1):
-        try:
-            async with engine.begin() as conn:
-                await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-                await conn.run_sync(Base.metadata.create_all)
-                # Idempotent schema additions for already-existing tables created before
-                # the `username` column existed (no migration framework here; `create_all`
-                # does not ALTER existing tables).
-                await conn.execute(
-                    text("ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50)")
-                )
-                await conn.execute(
-                    text(
-                        "CREATE UNIQUE INDEX IF NOT EXISTS "
-                        "ix_users_username ON users (username)"
-                    )
-                )
-            return
-        except (SQLAlchemyError, OSError) as exc:
-            if attempt == DB_STARTUP_RETRIES:
-                raise
-            print(
-                f"WARNING: database startup attempt {attempt}/{DB_STARTUP_RETRIES} "
-                f"failed ({exc}); retrying in {DB_RETRY_DELAY_SECONDS}s..."
-            )
-            await asyncio.sleep(DB_RETRY_DELAY_SECONDS)
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:

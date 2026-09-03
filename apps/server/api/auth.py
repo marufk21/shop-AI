@@ -1,6 +1,6 @@
 from typing import Literal
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Cookie, Depends, Header, HTTPException, Response, status
 
 from controllers.auth_controller import AuthController
 from core.config import settings
@@ -51,7 +51,10 @@ async def signup(
 ) -> AuthResponse:
     user, session_token = await auth_controller.signup(payload)
     set_auth_cookie(response, session_token)
-    return AuthResponse(user=AuthUserResponse.model_validate(user))
+    return AuthResponse(
+        user=AuthUserResponse.model_validate(user),
+        session_token=session_token,
+    )
 
 
 @router.post("/signin", response_model=AuthResponse)
@@ -62,16 +65,23 @@ async def signin(
 ) -> AuthResponse:
     user, session_token = await auth_controller.signin(payload)
     set_auth_cookie(response, session_token)
-    return AuthResponse(user=AuthUserResponse.model_validate(user))
+    return AuthResponse(
+        user=AuthUserResponse.model_validate(user),
+        session_token=session_token,
+    )
 
 
 @router.post("/signout", status_code=status.HTTP_204_NO_CONTENT)
 async def signout(
     response: Response,
     session_token: str | None = Cookie(default=None, alias=settings.auth_cookie_name),
+    authorization: str | None = Header(default=None),
     auth_controller: AuthController = Depends(get_auth_controller),
 ) -> None:
-    await auth_controller.signout(session_token)
+    token = session_token
+    if not token and authorization and authorization.startswith("Bearer "):
+        token = authorization.removeprefix("Bearer ").strip()
+    await auth_controller.signout(token)
     clear_auth_cookie(response)
 
 

@@ -71,6 +71,12 @@ export function AuthModal({ onAuthenticated }: { onAuthenticated?: () => void })
   })
 
   async function handleAuthSuccess(response: AuthResponse) {
+    if (typeof window !== "undefined") {
+      if (response.session_token) {
+        localStorage.setItem("shopai_token", response.session_token)
+      }
+      localStorage.setItem("shopai_user", JSON.stringify(response.user))
+    }
     setAuthenticatedUser(response.user)
     signInForm.reset()
     signUpForm.reset({ username: "", email: "", password: "", confirmPassword: "" })

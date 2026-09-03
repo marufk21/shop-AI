@@ -25,15 +25,32 @@ interface AuthContextValue {
 const authQueryKey = ["auth", "me"] as const
 const AuthContext = React.createContext<AuthContextValue | null>(null)
 
+function getStoredUser(): AuthUser | null {
+  if (typeof window === "undefined") return null
+  try {
+    const raw = localStorage.getItem("shopai_user")
+    return raw ? (JSON.parse(raw) as AuthUser) : null
+  } catch {
+    return null
+  }
+}
+
 async function fetchCurrentUser(): Promise<AuthUser | null> {
   try {
     const response = await apiClient.get<AuthResponse>("/api/auth/me")
+    if (typeof window !== "undefined") {
+      localStorage.setItem("shopai_user", JSON.stringify(response.user))
+    }
     return response.user
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("shopai_user")
+        localStorage.removeItem("shopai_token")
+      }
       return null
     }
-    throw error
+    return getStoredUser()
   }
 }
 
@@ -46,14 +63,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data: user, isLoading, refetch } = useQuery({
     queryKey: authQueryKey,
     queryFn: fetchCurrentUser,
+    initialData: getStoredUser,
     staleTime: 60_000,
-    retry: false,
+    retry: 1,
   })
 
-  const status: AuthStatus = isLoading
-    ? "loading"
-    : user
-      ? "authenticated"
+  const status: AuthStatus = user
+    ? "authenticated"
+    : isLoading
+      ? "loading"
       : "unauthenticated"
 
   const value = React.useMemo<AuthContextValue>(
@@ -74,6 +92,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return result.data ?? null
       },
       setAuthenticatedUser: (nextUser) => {
+        if (typeof window !== "undefined") {
+          if (nextUser) {
+            localStorage.setItem("shopai_user", JSON.stringify(nextUser))
+          } else {
+            localStorage.removeItem("shopai_user")
+            localStorage.removeItem("shopai_token")
+          }
+        }
         queryClient.setQueryData(authQueryKey, nextUser)
       },
       consumeIntent: () => {

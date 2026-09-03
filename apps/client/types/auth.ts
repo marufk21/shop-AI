@@ -10,6 +10,7 @@ export interface AuthUser {
 
 export interface AuthResponse {
   user: AuthUser
+  session_token?: string | null
 }
 
 export type AuthIntent = "checkout" | "account" | "wishlist"
