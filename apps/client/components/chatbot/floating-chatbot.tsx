@@ -34,14 +34,42 @@ const AGENT_META: Record<
 }
 
 const quickReplies = [
-  { icon: Storefront, label: "Products", prompt: "Show me some products" },
-  { icon: Truck, label: "Shipping", prompt: "What's your shipping policy?" },
-  { icon: ArrowBendUpLeft, label: "Returns", prompt: "What's your return policy?" },
-  { icon: Gift, label: "Gift wrap", prompt: "Do you offer gift wrapping?" },
+  {
+    icon: Storefront,
+    label: "Find products",
+    description: "Browse tailored picks",
+    prompt: "Recommend some products for me",
+  },
+  {
+    icon: Gift,
+    label: "Gift ideas",
+    description: "Help choosing a present",
+    prompt: "Recommend some gift ideas",
+  },
+  {
+    icon: Truck,
+    label: "Shipping help",
+    description: "Delivery and tracking",
+    prompt: "What are your shipping options?",
+  },
+  {
+    icon: ArrowBendUpLeft,
+    label: "Returns help",
+    description: "Returns and refunds",
+    prompt: "What is your return policy?",
+  },
+]
+
+const productFollowUps = [
+  { label: "Cheaper options", prompt: "Show cheaper options" },
+  { label: "Only in stock", prompt: "Show only in-stock options" },
+  { label: "More like this", prompt: "Show more like this" },
 ]
 
 export function FloatingChatbot() {
-  const { messages, isStreaming, sendMessage, clearMessages, activeAgent } = useChat()
+  const { messages, isStreaming, sendMessage, clearMessages, activeAgent } = useChat({
+    endpoint: "/api/v1/store/chat/message",
+  })
   const [input, setInput] = useState("")
   const [open, setOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -159,19 +187,26 @@ export function FloatingChatbot() {
                     How can I help?
                   </p>
                   <p className="text-[11px] text-muted-foreground mt-1 text-center max-w-55 leading-relaxed">
-                    Ask about products, shipping, returns, or anything else.
+                    Choose a starting point or ask anything about the store.
                   </p>
 
-                  {/* Quick reply chips */}
-                  <div className="flex flex-wrap justify-center gap-1.5 mt-4 max-w-70">
-                    {quickReplies.map(({ icon: Icon, label, prompt }) => (
+                  {/* Suggested starting points */}
+                  <div className="grid w-full max-w-70 grid-cols-2 gap-2 mt-4">
+                    {quickReplies.map(({ icon: Icon, label, description, prompt }) => (
                       <button
                         key={label}
                         onClick={() => handleSend(prompt)}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition-all duration-150 hover:text-foreground hover:border-border hover:bg-muted/30 cursor-pointer"
+                        className="group flex min-h-17 flex-col items-start rounded-xl border border-border/50 bg-background px-3 py-2.5 text-left transition-all duration-150 hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm cursor-pointer"
                       >
-                        <Icon className="size-3 shrink-0" />
-                        {label}
+                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
+                          <span className="flex size-5 items-center justify-center rounded-md bg-muted text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
+                            <Icon className="size-3" />
+                          </span>
+                          {label}
+                        </div>
+                        <span className="mt-1 text-[10px] leading-snug text-muted-foreground">
+                          {description}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -236,6 +271,21 @@ export function FloatingChatbot() {
                           )}
                         </div>
                       </div>
+
+                      {isBot && msg.agent === "product" && !isStreaming && msg.content && (
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {productFollowUps.map(({ label, prompt }) => (
+                            <button
+                              key={prompt}
+                              onClick={() => handleSend(prompt)}
+                              className="rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-[10px] font-medium text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
+                              disabled={isStreaming}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
                       {/* Sources */}
                       {msg.sources && msg.sources.length > 0 && (

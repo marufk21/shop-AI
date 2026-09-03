@@ -9,6 +9,16 @@ class Settings(BaseSettings):
     app_name: str = Field(default="ShopAI", validation_alias="APP_NAME")
     debug: bool = Field(default=False, validation_alias="APP_DEBUG")
     gemini_api_key: str = Field(validation_alias="GEMINI_API_KEY")
+    frontend_url: str | None = Field(default=None, validation_alias="FRONTEND_URL")
+    auth_cookie_name: str = Field(
+        default="shopai_session", validation_alias="AUTH_COOKIE_NAME"
+    )
+    session_ttl_seconds: int = Field(
+        default=60 * 60 * 24 * 7, validation_alias="SESSION_TTL_SECONDS"
+    )
+    secure_cookies: bool = Field(default=False, validation_alias="SECURE_COOKIES")
+    admin_email: str | None = Field(default=None, validation_alias="ADMIN_EMAIL")
+    admin_password: str | None = Field(default=None, validation_alias="ADMIN_PASSWORD")
     database_pool_size: int = Field(default=10)
     database_max_overflow: int = Field(default=5)
     database_pool_timeout: int = Field(default=10)

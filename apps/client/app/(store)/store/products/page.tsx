@@ -5,7 +5,12 @@ import { storeProductKeys } from "@/hooks/store/use-products"
 import { fetchStoreProducts } from "@/server/store/product-fetchers"
 import { AllProductsContent } from "@/components/store/all-products-content"
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
+  const { q } = await searchParams
   const queryClient = getQueryClient()
 
   try {
@@ -19,7 +24,7 @@ export default async function ProductsPage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <AllProductsContent />
+      <AllProductsContent initialSearch={q ?? ""} />
     </HydrationBoundary>
   )
 }

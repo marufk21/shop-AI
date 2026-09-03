@@ -81,10 +81,20 @@ function buildCategoryTree(products: { category: string }[]): {
   }
 }
 
-export function ProductsSection() {
+export function ProductsSection({
+  initialSearch = "",
+}: {
+  initialSearch?: string
+}) {
   const prefersReducedMotion = useReducedMotion()
 
-  const [search, setSearch] = React.useState("")
+  const [search, setSearch] = React.useState(initialSearch)
+
+  // Sync the query from the URL (e.g. navbar search) into the local filter
+  // state when it changes while already on this page.
+  React.useEffect(() => {
+    setSearch(initialSearch)
+  }, [initialSearch])
   const [masterCategory, setMasterCategory] = React.useState("All")
   const [articleType, setArticleType] = React.useState("All")
   const [sort, setSort] = React.useState("popular")

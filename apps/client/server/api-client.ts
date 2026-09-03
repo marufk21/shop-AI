@@ -48,13 +48,17 @@ function buildUrl(path: string, params?: Record<string, string | number | boolea
 export const apiClient = {
   async get<T>(path: string, options?: RequestOptions): Promise<T> {
     const url = buildUrl(path, options?.params)
-    const response = await fetch(url, options?.next ? { next: options.next } : undefined)
+    const response = await fetch(url, {
+      credentials: "include",
+      ...(options?.next ? { next: options.next } : {}),
+    })
     return handleResponse<T>(response)
   },
 
   async post<T>(path: string, body?: unknown): Promise<T> {
     const response = await fetch(`${BASE_URL}${path}`, {
       method: "POST",
+      credentials: "include",
       headers: body instanceof FormData ? undefined : { "Content-Type": "application/json" },
       body: body instanceof FormData ? body : JSON.stringify(body),
     })
@@ -64,6 +68,7 @@ export const apiClient = {
   async put<T>(path: string, body?: unknown): Promise<T> {
     const response = await fetch(`${BASE_URL}${path}`, {
       method: "PUT",
+      credentials: "include",
       headers: body instanceof FormData ? undefined : { "Content-Type": "application/json" },
       body: body instanceof FormData ? body : JSON.stringify(body),
     })
@@ -73,6 +78,7 @@ export const apiClient = {
   async delete<T = void>(path: string): Promise<T> {
     const response = await fetch(`${BASE_URL}${path}`, {
       method: "DELETE",
+      credentials: "include",
     })
     return handleResponse<T>(response)
   },

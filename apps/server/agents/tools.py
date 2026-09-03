@@ -18,61 +18,34 @@ def get_product_tools(db: AsyncSession) -> list[BaseTool]:
     """Return product-related tools bound to the given session."""
 
     repo = ProductRepository(db)
+    live_status = "active"
 
     @tool
     async def search_products(  # noqa: N802
         query: str,
         category: str | None = None,
         max_price: float | None = None,
-        limit: int = 5,
+        min_price: float | None = None,
+        in_stock: bool = False,
+        sort_by: str = "newest",
+        limit: int = 3,
     ) -> str:
-        """Search the product catalog by name, category, and price range.
+        """Search the product catalog by name, category, price, and stock.
 
         Use this when a customer wants to find, browse, filter, or compare
-        products. Returns a JSON array of matching products.
+        products. Set sort_by to "price_low_to_high" or
+        "price_high_to_low" when the price order matters. Returns a JSON
+        array of matching products.
         """
 
         products, _ = await repo.list_all(
-            status="published",
+            status=live_status,
             search=query if query else None,
             category=category,
-            limit=limit * 2 if max_price else limit,
-        )
-
-        results = []
-        for p in products:
-            if max_price is not None and float(p.price) > max_price:
-                continue
-            results.append(
-                {
-                    "name": p.name,
-                    "slug": p.slug,
-                    "price": float(p.price),
-                    "category": p.category,
-                    "description": p.description,
-                    "image_url": p.image_url,
-                    "inventory": p.inventory,
-                }
-            )
-            if len(results) >= limit:
-                break
-
-        return json.dumps(results) if results else "No products found."
-
-    @tool
-    async def recommend_products(  # noqa: N802
-        category: str | None = None,
-        limit: int = 5,
-    ) -> str:
-        """Recommend products from the catalog.
-
-        Use this when a customer wants suggestions, recommendations, or
-        browsing inspiration. Returns a JSON array of products.
-        """
-
-        products, _ = await repo.list_all(
-            status="published",
-            category=category,
+            min_price=min_price,
+            max_price=max_price,
+            in_stock=in_stock,
+            sort_by=sort_by,
             limit=limit,
         )
 
@@ -83,6 +56,51 @@ def get_product_tools(db: AsyncSession) -> list[BaseTool]:
                 "price": float(p.price),
                 "category": p.category,
                 "description": p.description,
+                "image_url": p.image_url,
+                "inventory": p.inventory,
+            }
+            for p in products
+        ]
+
+        return json.dumps(results) if results else "No products found."
+
+    @tool
+    async def recommend_products(  # noqa: N802
+        query: str | None = None,
+        category: str | None = None,
+        max_price: float | None = None,
+        in_stock: bool = False,
+        sort_by: str = "newest",
+        limit: int = 3,
+    ) -> str:
+        """Recommend products from the catalog.
+
+        Use this when a customer wants suggestions, recommendations, or
+        browsing inspiration. Optionally use the query field for customer
+        preferences like brand, style, or product type. Set sort_by to
+        "price_low_to_high" or "price_high_to_low" when needed. Returns a
+        JSON array of products.
+        """
+
+        products, _ = await repo.list_all(
+            status=live_status,
+            category=category,
+            search=query if query else None,
+            max_price=max_price,
+            in_stock=in_stock,
+            sort_by=sort_by,
+            limit=limit,
+        )
+
+        results = [
+            {
+                "name": p.name,
+                "slug": p.slug,
+                "price": float(p.price),
+                "category": p.category,
+                "description": p.description,
+                "image_url": p.image_url,
+                "inventory": p.inventory,
             }
             for p in products
         ]

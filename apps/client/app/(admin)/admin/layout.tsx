@@ -1,12 +1,20 @@
+import { redirect } from "next/navigation"
+
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { AppHeader } from "@/components/layout/app-header"
+import { fetchServerAuthUser } from "@/server/auth-fetchers"
 import { SidebarInset } from "@workspace/ui/components/sidebar"
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const user = await fetchServerAuthUser()
+  if (!user || user.role !== "admin") {
+    redirect("/store")
+  }
+
   return (
     <>
       <AppSidebar />

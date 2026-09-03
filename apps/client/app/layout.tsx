@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   description:
     "AI-first e-commerce platform with product generation, RAG chatbot, and real-time analytics.",
   icons: {
-    icon: "/logo.png",
+    icon: "/icon.svg",
   },
   openGraph: {
     title: "ShopAI - AI-Powered E-Commerce",
@@ -56,6 +56,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={cn(
         lora.variable,

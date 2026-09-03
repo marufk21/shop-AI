@@ -4,6 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
+import { toast } from "sonner"
 import {
   X,
   ShoppingBag,
@@ -16,7 +17,11 @@ import {
 import { Button } from "@workspace/ui/components/button"
 import { Separator } from "@workspace/ui/components/separator"
 import { useCart } from "@/components/store/cart-provider"
+import { AuthModal } from "@/components/auth/auth-modal"
+import { useAuth } from "@/components/auth/auth-provider"
 import { getProductImageUrl } from "@/lib/image-url"
+import { ApiError, apiClient } from "@/server/api-client"
+import type { Order } from "@/types/order"
 
 export function CartDrawer() {
   const {
@@ -27,7 +32,10 @@ export function CartDrawer() {
     closeCart,
     removeItem,
     updateQuantity,
+    clearCart,
   } = useCart()
+  const { consumeIntent, openAuthModal, status } = useAuth()
+  const [isCheckingOut, setIsCheckingOut] = React.useState(false)
 
   const prefersReducedMotion = useReducedMotion()
 
@@ -48,6 +56,47 @@ export function CartDrawer() {
       document.body.style.overflow = ""
     }
   }, [isOpen])
+
+  const checkoutItems = React.useMemo(
+    () =>
+      items.map((item) => ({
+        product_id: item.productId,
+        quantity: item.quantity,
+      })),
+    [items]
+  )
+
+  async function submitCheckout() {
+    if (checkoutItems.length === 0) {
+      return
+    }
+
+    try {
+      setIsCheckingOut(true)
+      const order = await apiClient.post<Order>("/api/orders", { items: checkoutItems })
+      clearCart()
+      closeCart()
+      toast.success(`Order ${order.id.slice(0, 8)} created`, {
+        description: "Your order is pending payment.",
+      })
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        openAuthModal("checkout", "signin")
+        return
+      }
+      toast.error(
+        error instanceof ApiError ? error.message : "Unable to complete checkout"
+      )
+    } finally {
+      setIsCheckingOut(false)
+    }
+  }
+
+  async function handleAuthenticated() {
+    if (consumeIntent() === "checkout") {
+      await submitCheckout()
+    }
+  }
 
   return (
     <AnimatePresence>
@@ -267,8 +316,12 @@ export function CartDrawer() {
                     ${total.toFixed(2)}
                   </span>
                 </div>
-                <Button className="w-full h-11 rounded-lg font-semibold cursor-pointer text-sm shadow-lg shadow-primary/20">
-                  Checkout
+                <Button
+                  className="w-full h-11 rounded-lg font-semibold cursor-pointer text-sm shadow-lg shadow-primary/20"
+                  onClick={() => void submitCheckout()}
+                  disabled={isCheckingOut || status === "loading"}
+                >
+                  {isCheckingOut ? "Processing..." : "Checkout"}
                   <ArrowRight className="ml-2 size-4" />
                 </Button>
                 <p className="text-center text-[11px] text-muted-foreground">
@@ -279,6 +332,7 @@ export function CartDrawer() {
           </motion.div>
         </>
       )}
+      <AuthModal onAuthenticated={() => void handleAuthenticated()} />
     </AnimatePresence>
   )
 }

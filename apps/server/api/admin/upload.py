@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
-from core.dependencies import get_cloudinary_uploader
+from core.dependencies import get_cloudinary_uploader, require_admin_user
+from models import User
 from utils.cloudinary import CloudinaryUploader
 
 router = APIRouter(prefix="/api/v1/upload", tags=["upload"])
@@ -13,6 +14,7 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 async def upload_image(
     file: UploadFile = File(...),
     folder: str = "products",
+    _: User = Depends(require_admin_user),
     uploader: CloudinaryUploader = Depends(get_cloudinary_uploader),
 ) -> dict[str, object]:
     if file.content_type not in ALLOWED_CONTENT_TYPES:

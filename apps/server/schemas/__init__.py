@@ -17,6 +17,16 @@ DocumentListResponse = _document_schema.DocumentListResponse
 _chat_schema = import_module("schemas.chat_schema")
 ChatRequest = _chat_schema.ChatRequest
 SourceCitation = _chat_schema.SourceCitation
+_auth_schema = import_module("schemas.auth_schema")
+SignUpRequest = _auth_schema.SignUpRequest
+SignInRequest = _auth_schema.SignInRequest
+AuthUserResponse = _auth_schema.AuthUserResponse
+AuthResponse = _auth_schema.AuthResponse
+_order_schema = import_module("schemas.order_schema")
+OrderCreateItem = _order_schema.OrderCreateItem
+OrderCreateRequest = _order_schema.OrderCreateRequest
+OrderItemResponse = _order_schema.OrderItemResponse
+OrderResponse = _order_schema.OrderResponse
 
 __all__ = [
     "ProductBase",
@@ -30,4 +40,12 @@ __all__ = [
     "DocumentListResponse",
     "ChatRequest",
     "SourceCitation",
+    "SignUpRequest",
+    "SignInRequest",
+    "AuthUserResponse",
+    "AuthResponse",
+    "OrderCreateItem",
+    "OrderCreateRequest",
+    "OrderItemResponse",
+    "OrderResponse",
 ]

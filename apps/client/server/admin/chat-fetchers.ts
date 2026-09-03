@@ -12,10 +12,12 @@ export type StreamCallbacks = {
 
 export async function streamChatMessage(
   request: ChatRequest,
-  callbacks: StreamCallbacks
+  callbacks: StreamCallbacks,
+  endpoint = "/api/v1/chat/message"
 ) {
-  const response = await fetch(`${API_URL}/api/v1/chat/message`, {
+  const response = await fetch(`${API_URL}${endpoint}`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   })

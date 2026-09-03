@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import Product
@@ -35,6 +35,10 @@ class ProductRepository:
         search: str | None = None,
         category: str | None = None,
         slugs: list[str] | None = None,
+        min_price: float | None = None,
+        max_price: float | None = None,
+        in_stock: bool = False,
+        sort_by: str = "newest",
         skip: int = 0,
         limit: int = 20,
     ) -> tuple[list[Product], int]:
@@ -57,16 +61,63 @@ class ProductRepository:
             query = query.where(cat_filter)
             count_query = count_query.where(cat_filter)
 
+        if min_price is not None:
+            price_filter = Product.price >= min_price
+            query = query.where(price_filter)
+            count_query = count_query.where(price_filter)
+
+        if max_price is not None:
+            price_filter = Product.price < max_price
+            query = query.where(price_filter)
+            count_query = count_query.where(price_filter)
+
+        if in_stock:
+            stock_filter = Product.inventory > 0
+            query = query.where(stock_filter)
+            count_query = count_query.where(stock_filter)
+
         if search is not None:
-            search_filter = Product.name.ilike(f"%{search}%")
-            query = query.where(search_filter)
-            count_query = count_query.where(search_filter)
+            normalized = search.strip()
+            if normalized:
+                tokens = [token for token in normalized.split() if token]
+
+                full_text_filter = or_(
+                    Product.name.ilike(f"%{normalized}%"),
+                    Product.description.ilike(f"%{normalized}%"),
+                    Product.category.ilike(f"%{normalized}%"),
+                    Product.slug.ilike(f"%{normalized}%"),
+                )
+
+                token_filters = [
+                    or_(
+                        Product.name.ilike(f"%{token}%"),
+                        Product.description.ilike(f"%{token}%"),
+                        Product.category.ilike(f"%{token}%"),
+                        Product.slug.ilike(f"%{token}%"),
+                    )
+                    for token in tokens
+                ]
+
+                search_filter = (
+                    or_(full_text_filter, and_(*token_filters))
+                    if token_filters
+                    else full_text_filter
+                )
+                query = query.where(search_filter)
+                count_query = count_query.where(search_filter)
 
         count_result = await self.db.execute(count_query)
         total = count_result.scalar() or 0
 
+        if sort_by == "price_low_to_high":
+            order_by = Product.price.asc()
+        elif sort_by == "price_high_to_low":
+            order_by = Product.price.desc()
+        else:
+            order_by = Product.created_at.desc()
+
         result = await self.db.execute(
-            query.order_by(Product.created_at.desc()).offset(skip).limit(limit)
+            query.order_by(order_by).offset(skip).limit(limit)
         )
         items = list(result.scalars().all())
 

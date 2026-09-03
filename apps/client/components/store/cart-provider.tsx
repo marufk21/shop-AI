@@ -25,11 +25,29 @@ type CartAction =
   | { type: "OPEN_CART" }
   | { type: "CLOSE_CART" }
 
+function isCartItem(value: unknown): value is CartItem {
+  if (typeof value !== "object" || value === null) return false
+
+  const item = value as Partial<CartItem>
+  return (
+    typeof item.productId === "string" && item.productId.trim().length > 0 &&
+    typeof item.name === "string" &&
+    typeof item.price === "number" && Number.isFinite(item.price) &&
+    typeof item.slug === "string" &&
+    typeof item.quantity === "number" &&
+    Number.isInteger(item.quantity) && item.quantity > 0 &&
+    (typeof item.imageUrl === "string" || item.imageUrl === null)
+  )
+}
+
 function loadCart(): CartItem[] {
   if (typeof window === "undefined") return []
   try {
     const stored = localStorage.getItem("shopai-cart")
-    return stored ? (JSON.parse(stored) as CartItem[]) : []
+    if (!stored) return []
+
+    const parsed: unknown = JSON.parse(stored)
+    return Array.isArray(parsed) ? parsed.filter(isCartItem) : []
   } catch {
     return []
   }
@@ -47,6 +65,10 @@ function saveCart(items: CartItem[]) {
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case "ADD_ITEM": {
+      if (!isCartItem(action.payload)) {
+        return state
+      }
+
       const existing = state.items.find(
         (i) => i.productId === action.payload.productId
       )

@@ -12,7 +12,8 @@ from fastapi import (
 )
 
 from controllers.admin.product_controller import AdminProductController
-from core.dependencies import get_admin_product_controller
+from core.dependencies import get_admin_product_controller, require_admin_user
+from models import User
 from schemas import (
     ProductCreate,
     ProductListResponse,
@@ -27,6 +28,7 @@ router = APIRouter(prefix="/api/v1/products", tags=["products"])
 async def create_product(
     data: str = Form(..., description="JSON string of ProductCreate"),
     image: UploadFile | None = File(None),
+    _: User = Depends(require_admin_user),
     controller: AdminProductController = Depends(get_admin_product_controller),
 ) -> ProductResponse:
     try:
@@ -45,6 +47,7 @@ async def list_products(
     search: str | None = Query(default=None),
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=20, ge=1, le=10000),
+    _: User = Depends(require_admin_user),
     controller: AdminProductController = Depends(get_admin_product_controller),
 ) -> ProductListResponse:
     return await controller.list_products(
@@ -55,6 +58,7 @@ async def list_products(
 @router.get("/{product_id}", response_model=ProductResponse)
 async def get_product(
     product_id: uuid.UUID,
+    _: User = Depends(require_admin_user),
     controller: AdminProductController = Depends(get_admin_product_controller),
 ) -> ProductResponse:
     product = await controller.get_product(product_id)
@@ -67,6 +71,7 @@ async def update_product(
     data: str = Form(..., description="JSON string of ProductUpdate"),
     image: UploadFile | None = File(None),
     remove_image: bool = Form(False),
+    _: User = Depends(require_admin_user),
     controller: AdminProductController = Depends(get_admin_product_controller),
 ) -> ProductResponse:
     try:
@@ -84,6 +89,7 @@ async def update_product(
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_product(
     product_id: uuid.UUID,
+    _: User = Depends(require_admin_user),
     controller: AdminProductController = Depends(get_admin_product_controller),
 ) -> None:
     await controller.delete_product(product_id)

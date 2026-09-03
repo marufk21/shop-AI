@@ -9,7 +9,11 @@ type SendOptions = {
   topK?: number
 }
 
-export function useChat() {
+type UseChatOptions = {
+  endpoint?: string
+}
+
+export function useChat({ endpoint }: UseChatOptions = {}) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [activeAgent, setActiveAgent] = useState<string | null>(null)
@@ -92,10 +96,11 @@ export function useChat() {
             setIsStreaming(false)
             setActiveAgent(null)
           },
-        }
+        },
+        endpoint
       )
     },
-    [messages]
+    [endpoint, messages]
   )
 
   const clearMessages = useCallback(() => {
