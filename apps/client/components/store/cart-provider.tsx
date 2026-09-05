@@ -24,6 +24,7 @@ type CartAction =
   | { type: "TOGGLE_CART" }
   | { type: "OPEN_CART" }
   | { type: "CLOSE_CART" }
+  | { type: "HYDRATE_CART"; payload: CartItem[] }
 
 function isCartItem(value: unknown): value is CartItem {
   if (typeof value !== "object" || value === null) return false
@@ -108,6 +109,8 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     }
     case "CLEAR_CART":
       return { ...state, items: [] }
+    case "HYDRATE_CART":
+      return { ...state, items: action.payload }
     case "TOGGLE_CART":
       return { ...state, isOpen: !state.isOpen }
     case "OPEN_CART":
@@ -182,15 +185,27 @@ export function useCart(): CartStateValue & CartDispatchValue {
 // ── Provider ──
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = React.useReducer(cartReducer, null, () => ({
-    items: loadCart(),
+  const [isHydrated, setIsHydrated] = React.useState(false)
+  const [state, dispatch] = React.useReducer(cartReducer, {
+    items: [],
     isOpen: false,
-  }))
+  })
 
-  // Persist cart to localStorage on every items change (side effect outside reducer)
+  // Hydrate cart from localStorage after mount to prevent SSR hydration mismatch
   React.useEffect(() => {
-    saveCart(state.items)
-  }, [state.items])
+    const stored = loadCart()
+    if (stored.length > 0) {
+      dispatch({ type: "HYDRATE_CART", payload: stored })
+    }
+    setIsHydrated(true)
+  }, [])
+
+  // Persist cart to localStorage on every items change (only after initial hydration)
+  React.useEffect(() => {
+    if (isHydrated) {
+      saveCart(state.items)
+    }
+  }, [isHydrated, state.items])
 
   // Memoize derived state so StateContext only changes when values actually differ
   const stateValue = React.useMemo<CartStateValue>(

@@ -2,30 +2,32 @@ import { Skeleton } from "@workspace/ui/components/skeleton"
 
 export function ProductCardSkeleton() {
   return (
-    <div className="flex w-full flex-col overflow-hidden rounded-xl border bg-card p-0 shadow-xs">
+    <div className="relative flex h-full w-full flex-col overflow-hidden rounded-xl border border-border/50 bg-card">
       {/* Product Image Skeleton */}
-      <div className="relative aspect-square w-full overflow-hidden bg-white">
+      <div className="relative aspect-square w-full overflow-hidden bg-muted/30">
         <Skeleton className="h-full w-full rounded-none" />
-        
-        {/* Badges/Actions Skeletons */}
-        <div className="absolute inset-x-2 top-2 flex items-center justify-between">
-          <Skeleton className="h-4.5 w-14 rounded-full" />
-          <Skeleton className="size-7.5 rounded-full" />
+
+        {/* Wishlist button placeholder */}
+        <div className="absolute right-2.5 top-2.5 sm:right-3 sm:top-3">
+          <Skeleton className="size-7 sm:size-8 rounded-full" />
         </div>
       </div>
 
       {/* Details Skeletons */}
-      <div className="flex flex-1 flex-col space-y-2 p-3 sm:space-y-3 sm:p-3.5">
-        {/* Name Title */}
-        <Skeleton className="h-4.5 w-3/4 rounded-lg" />
+      <div className="flex flex-1 flex-col p-3 sm:p-3.5">
+        {/* Category Label */}
+        <Skeleton className="h-2.5 w-16 rounded" />
+
+        {/* Name Title (matches line-clamp-2 on mobile, single line on desktop) */}
+        <div className="mt-1.5 space-y-1">
+          <Skeleton className="h-3.5 w-full rounded" />
+          <Skeleton className="h-3.5 w-2/3 rounded sm:hidden" />
+        </div>
 
         {/* Price & Stock info */}
-        <div className="flex items-center justify-between pt-1">
-          <Skeleton className="h-5 w-16 rounded-lg" />
-          <div className="flex items-center gap-1.5">
-            <Skeleton className="size-1.5 rounded-full shrink-0" />
-            <Skeleton className="h-3 w-10 rounded-lg" />
-          </div>
+        <div className="mt-auto flex items-end justify-between gap-1 pt-3">
+          <Skeleton className="h-4.5 w-16 rounded sm:h-5 sm:w-20" />
+          <Skeleton className="hidden h-3 w-10 rounded sm:inline-block" />
         </div>
       </div>
     </div>

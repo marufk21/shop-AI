@@ -33,6 +33,7 @@ export function CookieConsent() {
     <AnimatePresence>
       {visible && (
         <motion.div
+          key="cookie-consent"
           initial={prefersReducedMotion ? {} : { y: 24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 24, opacity: 0 }}

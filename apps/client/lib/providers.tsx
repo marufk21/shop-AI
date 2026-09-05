@@ -1,7 +1,6 @@
 "use client"
 
 import { QueryClientProvider } from "@tanstack/react-query"
-import { useState } from "react"
 import { SidebarProvider } from "@workspace/ui/components/sidebar"
 import { ThemeProvider } from "@/components/shared/theme-provider"
 import { LenisProvider } from "@/components/shared/lenis-provider"
@@ -11,7 +10,7 @@ import { Toaster } from "sonner"
 import { getQueryClient } from "@/lib/query-client"
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(getQueryClient)
+  const queryClient = getQueryClient()
 
   return (
     <ThemeProvider>

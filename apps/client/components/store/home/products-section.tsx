@@ -356,7 +356,7 @@ export function ProductsSection({
         <div className="min-h-96">
           {isLoading && (
             <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, i) => (
+              {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>

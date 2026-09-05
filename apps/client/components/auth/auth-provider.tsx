@@ -63,10 +63,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data: user, isLoading, refetch } = useQuery({
     queryKey: authQueryKey,
     queryFn: fetchCurrentUser,
-    initialData: getStoredUser,
     staleTime: 60_000,
     retry: 1,
   })
+
+  // Hydrate stored user on client mount to avoid SSR hydration mismatch
+  React.useEffect(() => {
+    const cachedUser = getStoredUser()
+    if (cachedUser && !queryClient.getQueryData(authQueryKey)) {
+      queryClient.setQueryData(authQueryKey, cachedUser)
+    }
+  }, [queryClient])
 
   const status: AuthStatus = user
     ? "authenticated"

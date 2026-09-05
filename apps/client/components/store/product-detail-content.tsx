@@ -25,7 +25,7 @@ import { Separator } from "@workspace/ui/components/separator"
 
 import { useStoreProduct } from "@/hooks/store/use-products"
 import { useRecentlyViewed } from "@/hooks/store/use-recently-viewed"
-import { useCartDispatch } from "@/components/store/cart-provider"
+import { useCartState, useCartDispatch } from "@/components/store/cart-provider"
 import { RelatedProducts } from "@/components/store/related-products"
 
 import { getProductImageUrl } from "@/lib/image-url"
@@ -39,9 +39,15 @@ export function ProductDetailContent({ slug }: ProductDetailContentProps) {
   const [activeTab, setActiveTab] = useState("features")
   const [isWishlisted, setIsWishlisted] = useState(false)
   const { data: product, isError, isLoading } = useStoreProduct(slug)
-  const { addItem } = useCartDispatch()
+  const { items } = useCartState()
+  const { addItem, updateQuantity, removeItem, openCart } = useCartDispatch()
   const prefersReducedMotion = useReducedMotion()
   const { addItem: addRecentlyViewed } = useRecentlyViewed()
+
+  const cartItem = items.find((i) => i.productId === product?.id)
+  const inCartQuantity = cartItem?.quantity ?? 0
+  const isItemInCart = inCartQuantity > 0
+  const currentQuantity = isItemInCart ? inCartQuantity : quantity
 
   useEffect(() => {
     if (product) {
@@ -93,8 +99,37 @@ export function ProductDetailContent({ slug }: ProductDetailContentProps) {
   const categoryParts = product.category.split(">").map((s) => s.trim())
   const mainCategory = categoryParts[0] ?? product.category
 
+  const handleIncrease = () => {
+    if (!product) return
+    if (isItemInCart) {
+      if (inCartQuantity < product.inventory) {
+        updateQuantity(product.id, inCartQuantity + 1)
+      }
+    } else {
+      setQuantity((q) => Math.min(product.inventory, q + 1))
+    }
+  }
+
+  const handleDecrease = () => {
+    if (!product) return
+    if (isItemInCart) {
+      if (inCartQuantity > 1) {
+        updateQuantity(product.id, inCartQuantity - 1)
+      } else {
+        removeItem(product.id)
+        setQuantity(1)
+      }
+    } else {
+      setQuantity((q) => Math.max(1, q - 1))
+    }
+  }
+
   const handleAddToCart = () => {
-    if (!inStock) return
+    if (!inStock || !product) return
+    if (isItemInCart) {
+      openCart()
+      return
+    }
     addItem({
       productId: product.id,
       name: product.name,
@@ -207,26 +242,29 @@ export function ProductDetailContent({ slug }: ProductDetailContentProps) {
               </span>
               <div className="flex items-center gap-0.5 rounded-md border bg-muted/30 p-0.5">
                 <button
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  onClick={handleDecrease}
                   aria-label="Decrease quantity"
                   className="flex size-9 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-background"
                 >
                   <Minus className="size-3.5" />
                 </button>
                 <span className="flex size-9 items-center justify-center text-sm font-semibold tabular-nums">
-                  {quantity}
+                  {currentQuantity}
                 </span>
                 <button
-                  onClick={() =>
-                    setQuantity((q) => Math.min(product.inventory, q + 1))
-                  }
-                  disabled={quantity >= product.inventory}
+                  onClick={handleIncrease}
+                  disabled={currentQuantity >= product.inventory}
                   aria-label="Increase quantity"
                   className="flex size-9 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-background disabled:opacity-40"
                 >
                   <Plus className="size-3.5" />
                 </button>
               </div>
+              {isItemInCart && (
+                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <Check className="size-3.5" weight="bold" /> In Cart
+                </span>
+              )}
             </div>
 
             <div className="flex gap-2">
@@ -234,10 +272,15 @@ export function ProductDetailContent({ slug }: ProductDetailContentProps) {
                 size="lg"
                 onClick={handleAddToCart}
                 disabled={!inStock}
+                variant={isItemInCart ? "secondary" : "default"}
                 className="h-12 flex-1 cursor-pointer rounded-lg text-sm font-semibold shadow-lg shadow-primary/20"
               >
                 <ShoppingCart className="mr-2 size-4.5" weight="fill" />
-                {inStock ? "Add to Cart" : "Out of Stock"}
+                {!inStock
+                  ? "Out of Stock"
+                  : isItemInCart
+                    ? "In Cart • View Cart"
+                    : "Add to Cart"}
               </Button>
               <Button
                 variant="outline"

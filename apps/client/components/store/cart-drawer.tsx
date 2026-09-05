@@ -20,8 +20,6 @@ import { useCart } from "@/components/store/cart-provider"
 import { AuthModal } from "@/components/auth/auth-modal"
 import { useAuth } from "@/components/auth/auth-provider"
 import { getProductImageUrl } from "@/lib/image-url"
-import { ApiError, apiClient } from "@/server/api-client"
-import type { Order } from "@/types/order"
 
 export function CartDrawer() {
   const {
@@ -32,7 +30,6 @@ export function CartDrawer() {
     closeCart,
     removeItem,
     updateQuantity,
-    clearCart,
   } = useCart()
   const { consumeIntent, openAuthModal, status } = useAuth()
   const [isCheckingOut, setIsCheckingOut] = React.useState(false)
@@ -73,20 +70,8 @@ export function CartDrawer() {
 
     try {
       setIsCheckingOut(true)
-      const order = await apiClient.post<Order>("/api/orders", { items: checkoutItems })
-      clearCart()
-      closeCart()
-      toast.success(`Order ${order.id.slice(0, 8)} created`, {
-        description: "Your order is pending payment.",
-      })
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        openAuthModal("checkout", "signin")
-        return
-      }
-      toast.error(
-        error instanceof ApiError ? error.message : "Unable to complete checkout"
-      )
+      await new Promise((resolve) => setTimeout(resolve, 350))
+      toast.info("You will be redirected to payment page")
     } finally {
       setIsCheckingOut(false)
     }
@@ -99,11 +84,11 @@ export function CartDrawer() {
   }
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
+    <>
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
+            key="cart-backdrop"
             initial={prefersReducedMotion ? {} : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -111,9 +96,11 @@ export function CartDrawer() {
             onClick={closeCart}
             className="fixed inset-0 z-50 bg-foreground/50 backdrop-blur-xs"
           />
+        )}
 
-          {/* Drawer */}
+        {isOpen && (
           <motion.div
+            key="cart-drawer"
             initial={prefersReducedMotion ? {} : { x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
@@ -330,9 +317,9 @@ export function CartDrawer() {
               </div>
             )}
           </motion.div>
-        </>
-      )}
+        )}
+      </AnimatePresence>
       <AuthModal onAuthenticated={() => void handleAuthenticated()} />
-    </AnimatePresence>
+    </>
   )
 }

@@ -63,33 +63,35 @@ export function CategoryPageContent({ categoryName }: CategoryPageContentProps) 
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6 md:pt-8 pb-6 md:pb-10">
         {/* Toolbar */}
-        <div className="mb-8 flex flex-col items-end gap-3">
-            <div className="flex items-center gap-2">
-              <Select value={sort} onValueChange={(v) => setSort(v ?? "popular")}>
-                <SelectTrigger className="h-8 w-full shrink-0 cursor-pointer rounded-lg border-border bg-background text-xs font-semibold sm:w-36">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value="Popular" className="text-xs">Popular</SelectItem>
-                  <SelectItem value="Price: Low → High" className="text-xs">Price: Low → High</SelectItem>
-                  <SelectItem value="Price: High → Low" className="text-xs">Price: High → Low</SelectItem>
-                  <SelectItem value="Newest" className="text-xs">Newest</SelectItem>
-                </SelectContent>
-              </Select>
+        <div className="mb-8 flex items-center justify-between gap-3">
+          {!isLoading ? (
+            <span className="inline-flex h-8 items-center justify-center rounded-lg border border-border bg-muted/40 px-3 text-xs font-semibold text-muted-foreground whitespace-nowrap">
+              {data?.total?.toLocaleString() ?? 0} Products
+            </span>
+          ) : (
+            <div className="h-8 w-24 rounded-lg bg-muted/40 border border-border animate-pulse" />
+          )}
 
-              {!isLoading && (
-                <span className="inline-flex h-8 items-center justify-center rounded-lg border border-border bg-muted/40 px-3 text-xs font-semibold text-muted-foreground whitespace-nowrap">
-                  {data?.total?.toLocaleString() ?? 0} Products
-                </span>
-              )}
-            </div>
+          <div className="flex items-center gap-2">
+            <Select value={sort} onValueChange={(v) => setSort(v ?? "Popular")}>
+              <SelectTrigger className="h-8 w-36 shrink-0 cursor-pointer rounded-lg border-border bg-background text-xs font-semibold">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="Popular" className="text-xs">Popular</SelectItem>
+                <SelectItem value="Price: Low → High" className="text-xs">Price: Low → High</SelectItem>
+                <SelectItem value="Price: High → Low" className="text-xs">Price: High → Low</SelectItem>
+                <SelectItem value="Newest" className="text-xs">Newest</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Products grid */}
         <div className="min-h-96">
           {isLoading && (
             <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, i) => (
+              {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
