@@ -1,6 +1,6 @@
 """LangGraph state definition for the multi-agent e-commerce chatbot."""
 
-from typing import Annotated, TypedDict
+from typing import Annotated, NotRequired, TypedDict
 
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
@@ -24,3 +24,4 @@ class AgentState(TypedDict):
     sources: list[dict[str, object]]
     temperature: float
     use_rag: bool
+    top_k: NotRequired[int]

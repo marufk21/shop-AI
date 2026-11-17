@@ -9,6 +9,7 @@ from langchain_core.messages import BaseMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import SecretStr
 
+from agents.intent import is_social_message
 from agents.state import AgentState
 from core.config import settings
 
@@ -25,6 +26,8 @@ Available agents:
   FAQs, general conversation, greetings, or anything not product-related.
 
 Respond with ONLY the agent name: "product" or "support".
+Use the recent conversation to interpret follow-ups such as "cheaper ones",
+"only in stock", or "more like this". A new explicit topic takes precedence.
 """
 
 _router_llm = ChatGoogleGenerativeAI(
@@ -41,8 +44,10 @@ async def supervisor_node(state: AgentState) -> dict[str, str]:
     """Classify intent and set ``current_agent`` in the state."""
 
     last_message: BaseMessage = state["messages"][-1]
+    if is_social_message(last_message.content):
+        return {"current_agent": "support"}
     response = await _router_llm.ainvoke(
-        [SystemMessage(content=SUPERVISOR_PROMPT), last_message]
+        [SystemMessage(content=SUPERVISOR_PROMPT), *state["messages"][-7:]]
     )
     decision = str(response.content).strip().lower()
 

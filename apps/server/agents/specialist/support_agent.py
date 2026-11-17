@@ -12,6 +12,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import SecretStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from agents.intent import is_social_message
 from agents.state import AgentState
 from core.config import settings
 from db.vector_repository import VectorRepository
@@ -72,11 +73,13 @@ def create_support_agent(db: AsyncSession) -> AgentNode:
         sources: list[dict[str, object]] = []
         system_content = SUPPORT_AGENT_NO_RAG_PROMPT
 
-        if use_rag:
+        if use_rag and not is_social_message(state["messages"][-1].content):
             user_message = state["messages"][-1]
             query = str(user_message.content)
             query_embedding = await generate_embedding(query)
-            results = await vector_repo.search_similar(query_embedding, 5)
+            results = await vector_repo.search_similar(
+                query_embedding, state.get("top_k", 5)
+            )
 
             context = ""
             seen: set[str] = set()
@@ -92,8 +95,9 @@ def create_support_agent(db: AsyncSession) -> AgentNode:
                     )
                     seen.add(doc.name)
 
-            if context:
-                system_content = SUPPORT_AGENT_PROMPT.format(context=context)
+            system_content = SUPPORT_AGENT_PROMPT.format(
+                context=context or "No store documents were found for this question."
+            )
 
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.5-flash",

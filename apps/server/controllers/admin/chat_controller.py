@@ -50,6 +50,7 @@ class ChatController:
                     "sources": [],
                     "temperature": request.temperature,
                     "use_rag": request.use_rag,
+                    "top_k": request.top_k,
                 }
 
                 collected_sources: list[SourceCitation] = []
