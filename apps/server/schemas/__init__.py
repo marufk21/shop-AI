@@ -27,6 +27,8 @@ OrderCreateItem = _order_schema.OrderCreateItem
 OrderCreateRequest = _order_schema.OrderCreateRequest
 OrderItemResponse = _order_schema.OrderItemResponse
 OrderResponse = _order_schema.OrderResponse
+OrderListResponse = _order_schema.OrderListResponse
+OrderUpdateRequest = _order_schema.OrderUpdateRequest
 
 __all__ = [
     "ProductBase",
@@ -48,4 +50,6 @@ __all__ = [
     "OrderCreateRequest",
     "OrderItemResponse",
     "OrderResponse",
+    "OrderListResponse",
+    "OrderUpdateRequest",
 ]

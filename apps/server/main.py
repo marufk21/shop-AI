@@ -10,6 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api import (
+    admin_order_routes,
     ai_routes,
     auth_routes,
     chat_routes,
@@ -46,6 +47,75 @@ async def init_database() -> None:
                         "username VARCHAR(50)"
                     )
                 )
+                # The application intentionally uses lightweight, idempotent
+                # migrations until a dedicated migration tool is introduced.
+                # These columns keep existing deployments compatible with the
+                # address-based, payment-free checkout flow.
+                for statement in (
+                    (
+                        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS "
+                        "shipping_fee NUMERIC(10, 2) NOT NULL DEFAULT 0"
+                    ),
+                    (
+                        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS "
+                        "shipping_full_name VARCHAR(120)"
+                    ),
+                    (
+                        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS "
+                        "shipping_email VARCHAR(320)"
+                    ),
+                    (
+                        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS "
+                        "shipping_phone VARCHAR(40)"
+                    ),
+                    (
+                        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS "
+                        "shipping_address_line1 VARCHAR(255)"
+                    ),
+                    (
+                        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS "
+                        "shipping_address_line2 VARCHAR(255)"
+                    ),
+                    (
+                        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS "
+                        "shipping_city VARCHAR(120)"
+                    ),
+                    (
+                        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS "
+                        "shipping_state VARCHAR(120)"
+                    ),
+                    (
+                        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS "
+                        "shipping_postal_code VARCHAR(40)"
+                    ),
+                    (
+                        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS "
+                        "shipping_country VARCHAR(120)"
+                    ),
+                    (
+                        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS "
+                        "tracking_number VARCHAR(120)"
+                    ),
+                    (
+                        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS "
+                        "admin_note VARCHAR(2000)"
+                    ),
+                    (
+                        "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS "
+                        "product_name VARCHAR(255)"
+                    ),
+                    (
+                        "ALTER TABLE order_items ADD COLUMN IF NOT EXISTS "
+                        "product_image_url VARCHAR(500)"
+                    ),
+                ):
+                    await conn.execute(text(statement))
+                await conn.execute(
+                    text(
+                        "UPDATE orders SET status = 'confirmed' "
+                        "WHERE status = 'pending_payment'"
+                    )
+                )
                 await conn.execute(
                     text(
                         "CREATE UNIQUE INDEX IF NOT EXISTS "
@@ -61,7 +131,6 @@ async def init_database() -> None:
                 f"failed ({exc}); retrying in {DB_RETRY_DELAY_SECONDS}s..."
             )
             await asyncio.sleep(DB_RETRY_DELAY_SECONDS)
-
 
 
 @asynccontextmanager
@@ -85,10 +154,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 app = FastAPI(title="ShopAI", version="0.1.0", lifespan=lifespan)
 
-ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "https://shop-ai-client-lake.vercel.app"
-]
+ALLOWED_ORIGINS = ["http://localhost:3000", "https://shop-ai-client-lake.vercel.app"]
 frontend_url = settings.frontend_url or os.getenv("FRONTEND_URL")
 if frontend_url:
     ALLOWED_ORIGINS.append(frontend_url)
@@ -105,6 +171,7 @@ app.add_middleware(
 app.include_router(ai_routes.router)
 app.include_router(auth_routes.router)
 app.include_router(order_routes.router)
+app.include_router(admin_order_routes.router)
 app.include_router(product_routes.router)
 app.include_router(store_routes.router)
 app.include_router(store_chat_routes.router)

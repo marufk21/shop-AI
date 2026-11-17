@@ -12,6 +12,7 @@ import {
   SignIn,
   SignOut,
   ShoppingBag,
+  Package,
 } from "@phosphor-icons/react"
 import {
   DropdownMenu,
@@ -148,6 +149,13 @@ export function MobileBottomBar() {
                 ) : null}
               </div>
 
+              <DropdownMenuItem
+                onClick={() => router.push("/store/orders")}
+                className="cursor-pointer"
+              >
+                <Package className="size-3.5" />
+                My orders
+              </DropdownMenuItem>
               {user?.role === "admin" ? (
                 <DropdownMenuItem
                   onClick={() => router.push("/admin")}

@@ -19,6 +19,7 @@ import {
 import {
   House,
   SquaresFour,
+  Package,
   ChatCircle,
   Files,
   ChartBar,
@@ -38,6 +39,7 @@ const adminGroups = [
     label: "Management",
     items: [
       { title: "Products", url: "/admin/products", icon: SquaresFour },
+      { title: "Orders", url: "/admin/orders", icon: Package },
       { title: "Documents", url: "/admin/documents", icon: Files },
     ],
   },

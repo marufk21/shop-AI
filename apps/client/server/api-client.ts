@@ -1,4 +1,9 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+// API paths in the app are absolute (for example `/api/v1/orders`). Accept the
+// documented `/api/v1` environment value while keeping exactly one API prefix.
+const configuredBaseUrl = (
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+).replace(/\/+$/, "")
+const BASE_URL = configuredBaseUrl.replace(/\/api\/v1$/, "")
 
 export class ApiError extends Error {
   status: number
@@ -92,6 +97,19 @@ export const apiClient = {
         ...getAuthHeaders(),
       },
       body: isFormData ? body : JSON.stringify(body),
+    })
+    return handleResponse<T>(response)
+  },
+
+  async patch<T>(path: string, body?: unknown): Promise<T> {
+    const response = await fetch(`${BASE_URL}${path}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(body),
     })
     return handleResponse<T>(response)
   },

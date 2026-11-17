@@ -5,6 +5,7 @@ auth_routes = import_module("api.auth")
 chat_routes = import_module("api.admin.chat")
 document_routes = import_module("api.admin.documents")
 order_routes = import_module("api.orders")
+admin_order_routes = import_module("api.admin.orders")
 product_routes = import_module("api.admin.products")
 upload_routes = import_module("api.admin.upload")
 store_routes = import_module("api.store.products")
@@ -15,6 +16,7 @@ __all__ = [
     "auth_routes",
     "product_routes",
     "order_routes",
+    "admin_order_routes",
     "store_routes",
     "store_chat_routes",
     "upload_routes",

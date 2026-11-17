@@ -13,13 +13,16 @@ import {
   Trash,
   ArrowRight,
   Package,
+  CheckCircle,
 } from "@phosphor-icons/react"
 import { Button } from "@workspace/ui/components/button"
 import { Separator } from "@workspace/ui/components/separator"
 import { useCart } from "@/components/store/cart-provider"
 import { AuthModal } from "@/components/auth/auth-modal"
 import { useAuth } from "@/components/auth/auth-provider"
+import { CheckoutForm } from "@/components/store/checkout-form"
 import { getProductImageUrl } from "@/lib/image-url"
+import type { Order } from "@/types/order"
 
 export function CartDrawer() {
   const {
@@ -28,11 +31,15 @@ export function CartDrawer() {
     itemCount,
     subtotal,
     closeCart,
+    clearCart,
     removeItem,
     updateQuantity,
   } = useCart()
-  const { consumeIntent, openAuthModal, status } = useAuth()
-  const [isCheckingOut, setIsCheckingOut] = React.useState(false)
+  const { consumeIntent, openAuthModal, status, user } = useAuth()
+  const [checkoutView, setCheckoutView] = React.useState<
+    "cart" | "details" | "success"
+  >("cart")
+  const [placedOrder, setPlacedOrder] = React.useState<Order | null>(null)
 
   const prefersReducedMotion = useReducedMotion()
 
@@ -54,6 +61,13 @@ export function CartDrawer() {
     }
   }, [isOpen])
 
+  React.useEffect(() => {
+    if (!isOpen) {
+      setCheckoutView("cart")
+      setPlacedOrder(null)
+    }
+  }, [isOpen])
+
   const checkoutItems = React.useMemo(
     () =>
       items.map((item) => ({
@@ -63,24 +77,28 @@ export function CartDrawer() {
     [items]
   )
 
-  async function submitCheckout() {
+  function beginCheckout() {
     if (checkoutItems.length === 0) {
       return
     }
-
-    try {
-      setIsCheckingOut(true)
-      await new Promise((resolve) => setTimeout(resolve, 350))
-      toast.info("You will be redirected to payment page")
-    } finally {
-      setIsCheckingOut(false)
+    if (status !== "authenticated") {
+      openAuthModal("checkout", "signin")
+      return
     }
+    setCheckoutView("details")
   }
 
   async function handleAuthenticated() {
     if (consumeIntent() === "checkout") {
-      await submitCheckout()
+      setCheckoutView("details")
     }
+  }
+
+  function handleOrderCompleted(order: Order) {
+    setPlacedOrder(order)
+    clearCart()
+    setCheckoutView("success")
+    toast.success("Your order has been placed")
   }
 
   return (
@@ -107,8 +125,39 @@ export function CartDrawer() {
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-background shadow-2xl border-l flex flex-col"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b">
+            {checkoutView === "details" ? (
+              <CheckoutForm
+                items={checkoutItems}
+                email={user?.email}
+                onBack={() => setCheckoutView("cart")}
+                onCompleted={handleOrderCompleted}
+              />
+            ) : checkoutView === "success" && placedOrder ? (
+              <div className="flex h-full flex-col items-center justify-center px-8 text-center">
+                <div className="flex size-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle className="size-8" weight="fill" />
+                </div>
+                <h2 className="mt-5 font-heading text-xl font-semibold">Order placed</h2>
+                <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
+                  We received your order and will confirm delivery and payment details with you soon.
+                </p>
+                <div className="mt-5 w-full rounded-xl border bg-muted/30 px-4 py-3 text-left">
+                  <p className="text-xs text-muted-foreground">Order reference</p>
+                  <p className="mt-1 font-mono text-sm font-semibold">
+                    #{placedOrder.id.slice(-8).toUpperCase()}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Total: ${placedOrder.total.toFixed(2)}
+                  </p>
+                </div>
+                <Button onClick={closeCart} className="mt-6 w-full rounded-lg font-semibold">
+                  Continue shopping
+                </Button>
+              </div>
+            ) : (
+              <>
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-5 border-b">
               <div className="flex items-center gap-3">
                 <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
                   <ShoppingBag className="size-4.5 text-primary" weight="fill" />
@@ -305,16 +354,18 @@ export function CartDrawer() {
                 </div>
                 <Button
                   className="w-full h-11 rounded-lg font-semibold cursor-pointer text-sm shadow-lg shadow-primary/20"
-                  onClick={() => void submitCheckout()}
-                  disabled={isCheckingOut || status === "loading"}
+                  onClick={beginCheckout}
+                  disabled={status === "loading"}
                 >
-                  {isCheckingOut ? "Processing..." : "Checkout"}
+                  Checkout
                   <ArrowRight className="ml-2 size-4" />
                 </Button>
                 <p className="text-center text-[11px] text-muted-foreground">
                   30-day easy returns
                 </p>
               </div>
+            )}
+              </>
             )}
           </motion.div>
         )}

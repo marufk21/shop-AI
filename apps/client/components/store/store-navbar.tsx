@@ -15,6 +15,7 @@ import {
   UserCircle,
   CaretDown,
   MagnifyingGlass,
+  Package,
 } from "@phosphor-icons/react"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -199,6 +200,13 @@ export function StoreNavbar() {
                     ) : null}
                   </div>
 
+                  <DropdownMenuItem
+                    onClick={() => router.push("/store/orders")}
+                    className="cursor-pointer"
+                  >
+                    <Package className="size-3.5" />
+                    My orders
+                  </DropdownMenuItem>
                   {user?.role === "admin" ? (
                     <DropdownMenuItem
                       onClick={() => router.push("/admin")}
